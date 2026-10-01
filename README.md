@@ -31,7 +31,9 @@ folder `C:\Users\Owner\source\repos\MagicSquareOfSquaresResearch`.
 
 Run from the research folder. Reads `TEX/<name>.tex`, writes
 `PDF/<name>.pdf` and `build.log`, and prints error, overfull/underfull-box
-and unresolved-reference counts. Default name `MagicSquaresOfSquaresResearch`.
+and unresolved-reference counts. Default name `magic_square_of_squares`.
+It refuses to build `MagicSquaresOfSquaresResearch`: that PDF is the
+original document that started the project and is kept unchanged.
 
 ```sh
 cd MagicSquareOfSquaresResearch
@@ -45,7 +47,7 @@ uncited/undefined bibliography entries, unbalanced theorem environments,
 statements without proofs, and an advisory on reused single-letter variables.
 
 ```sh
-python ../magic-square-tools/check.py TEX/MagicSquaresOfSquaresResearch.tex
+python ../magic-square-tools/check.py TEX/magic_square_of_squares.tex
 ```
 
 ### `verify_grid.py`
@@ -74,5 +76,6 @@ misses (7-square magic squares made of the centre and three full pairs).
 python ../magic-square-tools/center_search.py 200000 --quiet   # about 5 s
 ```
 
-Result so far: no solutions and no 3-of-4 near misses for E <= 200000.
+Result so far: no solutions and no primitive 3-of-4 near misses for
+E <= 1000000 (about 40 s).
 Exit code is 0 only if a solution is found.

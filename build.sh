@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 # Build the paper and report anything a referee would notice.
 # Run from the research folder (MagicSquareOfSquaresResearch):
-#   bash ../magic-square-tools/build.sh [name]   (default: MagicSquaresOfSquaresResearch)
+#   bash ../magic-square-tools/build.sh [name]   (default: magic_square_of_squares)
 # Reads TEX/<name>.tex, writes PDF/<name>.pdf and build.log.
+# PDF/MagicSquaresOfSquaresResearch.pdf is the original document that started
+# the project and is never rebuilt or overwritten.
 set -uo pipefail
-NAME="${1:-MagicSquaresOfSquaresResearch}"
+NAME="${1:-magic_square_of_squares}"
+PROTECTED="MagicSquaresOfSquaresResearch"
 ROOT="$(pwd)"
 LOG="$ROOT/build.log"
 
 command -v latexmk >/dev/null || { echo "latexmk not found. Install TeX Live / MacTeX / MiKTeX."; exit 1; }
+if [ "$NAME" = "$PROTECTED" ]; then
+  echo "refusing to build $NAME: PDF/$PROTECTED.pdf is the original and stays unchanged"; exit 1
+fi
 [ -f "TEX/$NAME.tex" ] || { echo "TEX/$NAME.tex not found (run from the research folder)"; exit 1; }
 
 cd TEX

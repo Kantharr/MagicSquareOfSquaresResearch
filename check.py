@@ -3,7 +3,7 @@
 Consistency checks on the LaTeX source, independent of whether it compiles.
 These replicate the sweeps used during drafting.
 
-    python check.py TEX/MagicSquaresOfSquaresResearch.tex
+    python check.py TEX/magic_square_of_squares.tex
 
 Checks:
   1. every \\ref / \\eqref resolves to a \\label
@@ -94,4 +94,4 @@ def main(path):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "TEX/MagicSquaresOfSquaresResearch.tex"))
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "TEX/magic_square_of_squares.tex"))
