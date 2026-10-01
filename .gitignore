@@ -1,0 +1,31 @@
+# Compiled binaries
+*.exe
+*.o
+*.out
+
+# Python
+__pycache__/
+*.pyc
+
+# PARI/GP runtime artifacts
+gp_history.txt
+pari.log
+
+# SageMath preparser output
+*.sage.py
+
+# LaTeX build byproducts (in case the paper source is copied in here)
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.toc
+build.log
+
+# Run output belongs in the research folder's data/, not here
+*.csv
+*.txt
+*.jsonl
+
+# The paper PDF (and any other PDF) never goes into this repository
+*.pdf
