@@ -148,7 +148,9 @@ rc_fibre(n, d, hmax) =
 /* one output line per lambda, parsed by route_c_run.py */
 rc_line(n, d, hmax) =
 {
+  \\ alarm() returns (does not raise) the e_ALARM error object when time runs out
   my(r = iferr(alarm(RC_TLIM, rc_fibre(n, d, hmax)), err,
-               [if(errname(err) == "e_ALARM", "timeout", Str("error ", errname(err))), [0, 0], 0, 0, 0, 0, []]));
+               [Str("error ", errname(err)), [0, 0], 0, 0, 0, 0, []]));
+  if(type(r) == "t_ERROR", r = [if(errname(r) == "e_ALARM", "timeout", Str("error ", errname(r))), [0, 0], 0, 0, 0, 0, []]);
   print("FIB ", n, " ", d, " | ", r[1], " | ", r[2], " | ", r[3], " | ", r[4], " | ", r[5], " | ", r[6], " | ", r[7]);
 }
