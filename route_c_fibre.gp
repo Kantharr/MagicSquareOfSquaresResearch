@@ -105,13 +105,14 @@ rc_isogpts(Em, G, rk, eff) =
   G;
 }
 
-rc_fibre(n, d, hmax) =
+/* curve, rank bounds and generators of the fibre: [cv, Em, ch, [r, R], G] or an error string */
+rc_setup(n, d) =
 {
-  my(cv, E, Em, ch, rk, eff, G, T, H, V, pts, nb = 0, hits = List(), np = 0, t, p, q, r);
-  if(gcd(n, d) != 1 || d <= 0, return(["error bad lambda", [0, 0], 0, 0, 0, 0, []]));
+  my(cv, E, Em, ch, rk, eff, G);
+  if(gcd(n, d) != 1 || d <= 0, return("error bad lambda"));
   cv = rc_curve(n, d);
   E = iferr(ellinit(cv[1]), err, 0);
-  if(E == 0 || #E == 0, return(["singular", [0, 0], 0, 0, 0, 0, []]));
+  if(E == 0 || #E == 0, return("singular"));
   Em = ellminimalmodel(E, &ch);
   \\ seed with small points, then raise the effort (at most to RC_EFFMAX) until the rank is
   \\ proven and we hold rank-many independent points; known points are always passed back in
@@ -120,6 +121,20 @@ rc_fibre(n, d, hmax) =
   while((rk[1] != rk[2] || #rk[4] < rk[1]) && eff < RC_EFFMAX, eff++; rk = ellrank(Em, eff, rk[4]));
   G = rk[4];
   if(rk[1] == rk[2] && #G < rk[1], G = rc_isogpts(Em, G, rk[1], RC_ISOEFF));
+  [cv, Em, ch, [rk[1], rk[2]], G];
+}
+
+rc_fibre(n, d, hmax) =
+{
+  my(s = rc_setup(n, d));
+  if(type(s) == "t_STR", return([s, [0, 0], 0, 0, 0, 0, []]));
+  rc_search(n, d, hmax, s[1], s[2], s[3], s[4], s[5]);
+}
+
+/* saturate G and test every point of height <= hmax (plus torsion translates) */
+rc_search(n, d, hmax, cv, Em, ch, rk, G) =
+{
+  my(T, H, V, pts, nb = 0, hits = List(), np = 0, t, p, q, r);
   if(#G, G = ellsaturation(Em, G, 50));
   T = rc_torsion(Em);
   pts = List();
@@ -143,6 +158,45 @@ rc_fibre(n, d, hmax) =
       if(r === 0, next);
       if(r[1] >= 7, listput(hits, [n, d, p, q, r[1], r[2], r[3]]))));
   [if(rk[1] != rk[2], "rank-unproven", #G < rk[1], "gens-incomplete", "ok"), [rk[1], rk[2]], #G, #T, np, nb, Vec(hits)];
+}
+
+/* stage 3 export: one JSON line with the minimal model, rank bounds and known generators,
+   read by route_c_mwrank.sage.  Rationals are written as strings "p/q". */
+rc_qstr(x) = Str("\"", x, "\"");
+rc_export(n, d) =
+{
+  my(s = iferr(rc_setup(n, d), err, Str("error ", errname(err))));
+  if(type(s) == "t_STR",
+    print("EXP {\"n\":", n, ",\"d\":", d, ",\"error\":\"", s, "\"}"); return);
+  my(a = s[2][1..5], G = s[5]);
+  print("EXP {\"n\":", n, ",\"d\":", d,
+        ",\"a\":[", strjoin(apply(rc_qstr, a), ","), "]",
+        ",\"rk\":[", s[4][1], ",", s[4][2], "]",
+        ",\"gens\":[", strjoin(apply(P -> Str("[", rc_qstr(P[1]), ",", rc_qstr(P[2]), "]"), G), ","), "]}");
+}
+
+/* stage 3 re-search with extra generators Gx (points on the same minimal model, e.g. from
+   mwrank) and external rank bounds rkx = [r, R]; every external point is checked. */
+rc_fibre_with(n, d, hmax, Gx, rkx) =
+{
+  my(s = rc_setup(n, d));
+  if(type(s) == "t_STR", return([s, [0, 0], 0, 0, 0, 0, []]));
+  my(Em = s[2], G = s[5], lo, hi);
+  foreach(Gx, P,
+    if(!ellisoncurve(Em, P), error("rc_fibre_with: external point not on Em"));
+    if(ellorder(Em, P) == 0 && rc_indep(Em, concat(G, [P])), G = concat(G, [P])));
+  lo = vecmax([s[4][1], rkx[1], #G]);
+  hi = vecmin([s[4][2], rkx[2]]);
+  if(lo > hi, error("rc_fibre_with: rank bounds inconsistent"));
+  rc_search(n, d, hmax, s[1], Em, s[3], [lo, hi], G);
+}
+
+rc_line_with(n, d, hmax, Gx, rkx) =
+{
+  my(r = iferr(alarm(RC_TLIM, rc_fibre_with(n, d, hmax, Gx, rkx)), err,
+               [Str("error ", errname(err)), [0, 0], 0, 0, 0, 0, []]));
+  if(type(r) == "t_ERROR", r = [if(errname(r) == "e_ALARM", "timeout", Str("error ", errname(r))), [0, 0], 0, 0, 0, 0, []]);
+  print("FIB ", n, " ", d, " | ", r[1], " | ", r[2], " | ", r[3], " | ", r[4], " | ", r[5], " | ", r[6], " | ", r[7]);
 }
 
 /* one output line per lambda, parsed by route_c_run.py */
