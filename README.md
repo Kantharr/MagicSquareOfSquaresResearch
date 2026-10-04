@@ -112,8 +112,16 @@ seventh square is a point of the fibre where one of them is a square.
   and is resumable. Before each batch it asks `~/.claude/hooks/cpu-gate.ps1`
   (no heavy jobs weekdays 8-17 Central or while Perfect Cuboid jobs run) and
   pauses if the gate is closed.
-- `route_c_analyze.py OUT` writes `summary.txt` and `hits.txt`, re-verifying
-  every hit (8 line sums, squares, distinctness) and deduplicating up to D4.
+- `route_c_analyze.py OUT [OUT2 ...]` writes `summary.txt` and `hits.txt` in the
+  first directory, re-verifying every hit (8 line sums, squares, distinctness)
+  and deduplicating up to D4. Later directories supersede earlier ones.
+- Stage 3 (completing fibres whose generators are missing):
+  `rc_export(n, d)` prints the fibre's minimal model, rank bounds and known
+  generators as JSON; `route_c_mwrank.sage IN OUT` runs mwrank on them inside
+  the Sage container (copy it to /tmp first; Sage writes a .py beside the
+  script); `rc_line_with(n, d, hmax, G, [r, R])` re-searches a fibre with
+  extra generators, each checked on the same model. The October 2026 pilot:
+  mwrank timed out (900 s) on all six incomplete rank-3 fibres tried.
 
 ```sh
 cd ../magic-square-tools
